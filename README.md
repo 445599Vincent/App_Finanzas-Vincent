@@ -130,6 +130,11 @@ Una limitación que la app declara en vez de esconder: **la primera línea de un
 estado no se puede verificar**, porque no hay saldo anterior contra el cual
 contrastarla. La pantalla de revisión siempre la marca.
 
+Las categorías **aprenden**: cuando corriges una, la corrección se guarda como
+regla y se aplica también a lo que ya tenías guardado de ese mismo comercio.
+Arreglar el pasado, no solo el futuro — y de ahí en adelante tu criterio le gana
+a la regla de fábrica.
+
 Y una consecuencia que costó ver: un pago a tu tarjeta debe salir del gasto
 **aunque todavía no hayas subido el estado de la tarjeta**. Si solo contaran los
 traslados con los dos lados visibles, tu cifra de gasto cambiaría según el orden
@@ -157,7 +162,10 @@ src/lib/         el motor, sin nada de interfaz
   esquemaEstado.ts la forma de lo que devuelve Claude
   normalizar.ts    de la transcripción a movimientos con signo resuelto
   leer.ts          cliente del navegador para /api/leer-estado
-src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión
+  almacen.ts       la interfaz de datos y la versión que guarda en el teléfono
+  almacenSupabase.ts la misma interfaz contra Postgres
+  crearAlmacen.ts  elige cuál usar según haya sesión o no
+src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión · Cuenta
 src/data/demo.ts datos de ejemplo (inventados, no son estados reales)
 supabase/        schema.sql y seed.sql
 ```
@@ -177,6 +185,9 @@ excluye `*.pdf` y la carpeta `estados/`.
       rasteriza cada página por su cuenta, así que no hay que convertir nada.
       Incluye la pantalla de revisión, el cuadre automático y la detección de
       traslados internos aunque solo hayas subido uno de los dos lados.
-- [ ] **Fase 3 — Traslados y categorías en vivo**, sobre datos de Supabase.
+- [x] **Fase 3 — Persistencia, categorías que aprenden y detalle de cuenta.**
+      Una sola interfaz de almacenamiento con dos implementaciones detrás: el
+      teléfono y Supabase. Las pantallas no saben cuál está activa, así que
+      conectar Supabase después no obliga a tocar interfaz.
 - [ ] **Fase 4 — Criterio con notificaciones** antes de cada vencimiento.
 - [ ] **Fase 5 — Reporte mensual en PDF**, exportación a Excel y modo sin conexión.

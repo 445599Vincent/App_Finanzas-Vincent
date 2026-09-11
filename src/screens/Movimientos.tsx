@@ -6,7 +6,15 @@ import { fechaCorta } from '../lib/dates'
 
 type Filtro = 'gasto' | 'todo' | 'interno'
 
-export function Movimientos({ cuentas, txns }: { cuentas: Account[]; txns: Txn[] }) {
+export function Movimientos({
+  cuentas,
+  txns,
+  onEditar,
+}: {
+  cuentas: Account[]
+  txns: Txn[]
+  onEditar?: (t: Txn) => void
+}) {
   const [filtro, setFiltro] = useState<Filtro>('gasto')
   const [busqueda, setBusqueda] = useState('')
 
@@ -97,6 +105,7 @@ export function Movimientos({ cuentas, txns }: { cuentas: Account[]; txns: Txn[]
                   </>
                 }
                 derecha={<Monto valor={t.monto} gris={t.esInterno} />}
+                onClick={onEditar ? () => onEditar(t) : undefined}
               />
             ))}
           </div>

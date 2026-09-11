@@ -1,4 +1,5 @@
 import type { Category } from '../types'
+import { claveComercio } from './recurring'
 
 /**
  * Categorias de arranque, pensadas para Republica Dominicana.
@@ -58,13 +59,32 @@ export const REGLAS: Array<{ patron: RegExp; categoriaId: string }> = [
   { patron: /nike|ikea|zara|tienda|store|atmosfera|sport/i, categoriaId: 'compras' },
 ]
 
+/**
+ * Una regla aprendida de tus correcciones. `patron` es la clave normalizada del
+ * comercio, no una expresion regular: viene de claveComercio(), asi que
+ * "SHELL VASQUEZ" y "Shell Vasquez  " caen en la misma.
+ */
+export interface Regla {
+  patron: string
+  categoriaId: string
+  vecesAplicada: number
+}
+
 /** Devuelve la categoria sugerida y que tan seguro esta. */
 export function sugerirCategoria(
   descripcion: string,
   monto: number,
   esInterno = false,
+  aprendidas: Regla[] = [],
 ): { categoriaId: string; confianza: number } {
   if (esInterno) return { categoriaId: 'interno', confianza: 1 }
+
+  // Lo que tu corregiste gana siempre. Si te tomaste el trabajo de cambiar una
+  // categoria, la app no tiene por que discutirtelo el mes que viene.
+  const clave = claveComercio(descripcion)
+  const tuya = aprendidas.find((r) => r.patron === clave)
+  if (tuya) return { categoriaId: tuya.categoriaId, confianza: 1 }
+
   if (monto > 0) return { categoriaId: 'ingreso', confianza: 0.8 }
 
   for (const r of REGLAS) {
@@ -73,4 +93,9 @@ export function sugerirCategoria(
     }
   }
   return { categoriaId: 'otros', confianza: 0.3 }
+}
+
+/** La regla que nace cuando corriges la categoria de un movimiento. */
+export function reglaDesde(descripcion: string, categoriaId: string): Regla {
+  return { patron: claveComercio(descripcion), categoriaId, vecesAplicada: 0 }
 }

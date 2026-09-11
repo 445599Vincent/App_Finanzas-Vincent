@@ -99,6 +99,58 @@ describe('traslados entre cuentas propias', () => {
   })
 })
 
+describe('traslados con un solo lado subido', () => {
+  it('reconoce un pago de tarjeta aunque el estado de la tarjeta no este subido', () => {
+    // Si contara como gasto, tu cifra dependeria del orden en que subes los PDF.
+    const txns = [t('s1', 'op', '2026-07-30', 'PagoTC Via MB***9090', -38419.92)]
+    const r = emparejarTraslados(txns, cuentas)
+    expect(r.enlaces).toHaveLength(0)
+    expect(r.internos.has('s1')).toBe(true)
+    expect(r.sinPareja.has('s1')).toBe(true)
+  })
+
+  it('reconoce una transferencia a tu otra cuenta sin el otro lado', () => {
+    const txns = [t('s1', 'op', '2026-08-17', 'Transf. via MB a 700445566', -11000)]
+    const r = emparejarTraslados(txns, cuentas)
+    expect(r.internos.has('s1')).toBe(true)
+    expect(r.sinPareja.has('s1')).toBe(true)
+  })
+
+  it('deja de marcarlo como huerfano cuando llega el otro lado', () => {
+    const txns = [
+      t('s1', 'op', '2026-08-17', 'Transf. via MB a 700445566', -11000),
+      t('e1', 'pr', '2026-08-17', 'Transf. via MB desde 700112233', 11000),
+    ]
+    const r = emparejarTraslados(txns, cuentas)
+    expect(r.enlaces).toHaveLength(1)
+    expect(r.sinPareja.size).toBe(0)
+  })
+
+  it('NO marca como interno un pago a un tercero', () => {
+    const txns = [t('s1', 'op', '2026-06-01', 'MB a 0790206593 J RODRIGUEZ', -15000)]
+    const r = emparejarTraslados(txns, cuentas)
+    expect(r.internos.size).toBe(0)
+    expect(r.sinPareja.size).toBe(0)
+  })
+
+  it('el gasto no cambia segun el orden en que subas los estados', () => {
+    const soloLaCuenta: Txn[] = [
+      t('s1', 'op', '2026-07-30', 'PagoTC Via MB***9090', -38419.92),
+      t('g1', 'op', '2026-07-31', 'SUPERMERCADO', -5000),
+    ]
+    const conLaTarjeta: Txn[] = [
+      ...soloLaCuenta,
+      t('e1', 'tc', '2026-07-30', 'Pago Via App', 38419.92),
+    ]
+    const gastoDe = (lista: Txn[]) => {
+      const { internos } = emparejarTraslados(lista, cuentas)
+      return resumirGastoReal(lista.map((x) => ({ ...x, esInterno: internos.has(x.id) }))).gastoReal
+    }
+    expect(gastoDe(soloLaCuenta)).toBe(5000)
+    expect(gastoDe(conLaTarjeta)).toBe(5000)
+  })
+})
+
 describe('totales limpios de traslados', () => {
   it('saca el traslado del gasto y lo reporta aparte', () => {
     const txns: Txn[] = [

@@ -36,6 +36,19 @@ export interface OpcionesTraslado {
   ventanaDias?: number
 }
 
+export interface Traslados {
+  /** Pares confirmados: se vieron los dos lados. */
+  enlaces: TransferLink[]
+  /** Todo movimiento que no debe contar como gasto ni como ingreso. */
+  internos: Set<string>
+  /**
+   * Salidas que nombran una cuenta tuya pero cuyo otro lado todavia no has
+   * subido. Tambien quedan fuera del gasto: el orden en que subes los estados
+   * no puede cambiar cuanto gastaste.
+   */
+  sinPareja: Set<string>
+}
+
 /**
  * Empareja los dos lados de cada traslado. Devuelve los pares encontrados y
  * el conjunto de ids que deben quedar marcados como internos.
@@ -44,7 +57,7 @@ export function emparejarTraslados(
   txns: Txn[],
   cuentas: Account[],
   opts: OpcionesTraslado = {},
-): { enlaces: TransferLink[]; internos: Set<string> } {
+): Traslados {
   const ventana = opts.ventanaDias ?? VENTANA_DIAS
   const porCuenta = new Map(cuentas.map((c) => [c.id, c]))
 
@@ -53,6 +66,7 @@ export function emparejarTraslados(
 
   const enlaces: TransferLink[] = []
   const internos = new Set<string>()
+  const sinPareja = new Set<string>()
   const usadas = new Set<string>()
 
   for (const salida of salidas) {
@@ -71,7 +85,14 @@ export function emparejarTraslados(
       return d <= ventana
     })
 
-    if (candidatas.length === 0) continue
+    if (candidatas.length === 0) {
+      // La descripcion nombra una cuenta tuya, asi que esto es un traslado
+      // aunque el otro lado no este todavia. Si contara como gasto, tu cifra
+      // dependeria de en que orden subiste los estados.
+      internos.add(salida.id)
+      sinPareja.add(salida.id)
+      continue
+    }
 
     // La mas cercana en el tiempo gana; a igualdad, la primera.
     candidatas.sort(
@@ -94,7 +115,7 @@ export function emparejarTraslados(
     internos.add(entrada.id)
   }
 
-  return { enlaces, internos }
+  return { enlaces, internos, sinPareja }
 }
 
 interface Destino {

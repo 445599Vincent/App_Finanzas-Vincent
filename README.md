@@ -32,6 +32,45 @@ npm run typecheck # revisa tipos sin compilar
 
 ---
 
+## Conectar Claude para que lea tus estados
+
+1. Saca una llave en [console.anthropic.com](https://console.anthropic.com) →
+   **API keys** y cárgale unos US$ 5 de crédito.
+2. Ponla en `.env` como `ANTHROPIC_API_KEY` — **sin el prefijo `VITE_`**.
+
+   Ese detalle importa: Vite mete en el bundle del navegador cualquier variable
+   que empiece por `VITE_`. Una llave con ese prefijo quedaría a la vista de
+   cualquiera que abra la página. Sin prefijo, solo la lee el servidor.
+
+3. Reinicia `npm run dev` y sube un PDF desde la pestaña **Estados**.
+
+Para comprobar que la lectura funciona antes de gastar en tus propios estados:
+
+```bash
+npm test
+```
+
+Con la llave puesta, `npm test` deja de saltarse la prueba de extremo a extremo:
+toma un estado sintético de `pruebas/fixtures/` —imagen pura a 300 dpi, con la
+forma exacta de los del Popular— lo manda a Claude y verifica que los cinco
+movimientos salgan con el signo, la fecha y el saldo correctos. Cuesta unos
+centavos.
+
+### Cómo está repartido el trabajo
+
+Claude **transcribe**: devuelve el texto tal cual está impreso, con el menos en
+la misma posición en que aparece y la fecha sin reformatear.
+
+El código **decide**: `signs.ts` y `dates.ts` aplican las reglas del Popular, y
+`reconcile.ts` comprueba la aritmética.
+
+No es un reparto arbitrario. Si el modelo también resolviera los signos habría
+dos fuentes de verdad y ninguna verificable; así el modelo hace lo que sabe
+hacer, que es ver, y si transcribe mal, la cadena de saldo corrido lo delata
+antes de que llegue a tus números.
+
+---
+
 ## Conectar tu propia base
 
 1. Crea un proyecto gratis en [supabase.com](https://supabase.com).
@@ -91,11 +130,21 @@ Una limitación que la app declara en vez de esconder: **la primera línea de un
 estado no se puede verificar**, porque no hay saldo anterior contra el cual
 contrastarla. La pantalla de revisión siempre la marca.
 
+Y una consecuencia que costó ver: un pago a tu tarjeta debe salir del gasto
+**aunque todavía no hayas subido el estado de la tarjeta**. Si solo contaran los
+traslados con los dos lados visibles, tu cifra de gasto cambiaría según el orden
+en que subes los PDF. Cuando la descripción nombra una cuenta tuya, basta;
+la etiqueta dice "falta el otro lado" hasta que aparezca.
+
 ---
 
 ## Estructura
 
 ```
+api/             la llamada a Claude, del lado del servidor
+  leer-estado.ts   el endpoint HTTP
+  _extraer.ts      el prompt de transcripción y la llamada a la API
+pruebas/         prueba de extremo a extremo y su estado sintético
 src/lib/         el motor, sin nada de interfaz
   signs.ts         convención de signo por tipo de estado
   dates.ts         los tres formatos de fecha
@@ -105,7 +154,10 @@ src/lib/         el motor, sin nada de interfaz
   recurring.ts     cargos que se repiten solos
   categories.ts    categorías y reglas de clasificación
   insights.ts      las cuatro familias de alertas
-src/screens/     Resumen · Movimientos · Estados · Criterio
+  esquemaEstado.ts la forma de lo que devuelve Claude
+  normalizar.ts    de la transcripción a movimientos con signo resuelto
+  leer.ts          cliente del navegador para /api/leer-estado
+src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión
 src/data/demo.ts datos de ejemplo (inventados, no son estados reales)
 supabase/        schema.sql y seed.sql
 ```
@@ -121,9 +173,10 @@ excluye `*.pdf` y la carpeta `estados/`.
       esquema de base de datos con RLS, subida de PDF, PWA instalable.
 - [x] **Motor de lectura.** Signos, fechas, cuadre, traslados, recurrentes,
       categorías y alertas, con 48 pruebas.
-- [ ] **Fase 2 — Lectura por visión.** Los PDFs del Popular son imágenes puras,
-      sin capa de texto: cada página se manda a la API de Claude. Pantalla de
-      revisión antes de guardar.
+- [x] **Fase 2 — Lectura por visión.** La API de Claude recibe el PDF completo y
+      rasteriza cada página por su cuenta, así que no hay que convertir nada.
+      Incluye la pantalla de revisión, el cuadre automático y la detección de
+      traslados internos aunque solo hayas subido uno de los dos lados.
 - [ ] **Fase 3 — Traslados y categorías en vivo**, sobre datos de Supabase.
 - [ ] **Fase 4 — Criterio con notificaciones** antes de cada vencimiento.
 - [ ] **Fase 5 — Reporte mensual en PDF**, exportación a Excel y modo sin conexión.

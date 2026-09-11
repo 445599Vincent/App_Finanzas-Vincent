@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { Vacio } from '../components/Piezas'
 import { IconoSubir } from '../components/Iconos'
-import { hayBackend } from '../lib/supabase'
 import { fechaLarga } from '../lib/dates'
 
 export interface EstadoGuardado {
@@ -12,25 +11,26 @@ export interface EstadoGuardado {
   desde?: string
   hasta?: string
   subidoEn: string
-  paginas: number
+  movimientos: number
   cuadre: 'ok' | 'con_descuadres' | 'sin_verificar'
 }
 
-/**
- * Archivo de estados.
- *
- * En esta fase el PDF se guarda y se puede volver a descargar. La lectura por
- * vision llega en la fase 2: los PDFs del Popular son imagenes puras, sin capa
- * de texto, asi que no hay nada que parsear localmente.
- */
-export function Estados({ estados }: { estados: EstadoGuardado[] }) {
-  const input = useRef<HTMLInputElement>(null)
-  const [pendiente, setPendiente] = useState<string | null>(null)
+export type FaseLectura =
+  | { tipo: 'listo' }
+  | { tipo: 'leyendo'; archivo: string }
+  | { tipo: 'error'; mensaje: string }
 
-  function alElegir(archivo: File | undefined) {
-    if (!archivo) return
-    setPendiente(archivo.name)
-  }
+export function Estados({
+  estados,
+  fase,
+  onElegirArchivo,
+}: {
+  estados: EstadoGuardado[]
+  fase: FaseLectura
+  onElegirArchivo: (archivo: File) => void
+}) {
+  const input = useRef<HTMLInputElement>(null)
+  const leyendo = fase.tipo === 'leyendo'
 
   return (
     <div className="vista">
@@ -45,24 +45,50 @@ export function Estados({ estados }: { estados: EstadoGuardado[] }) {
         type="file"
         accept="application/pdf"
         hidden
-        onChange={(e) => alElegir(e.target.files?.[0])}
+        onChange={(e) => {
+          const archivo = e.target.files?.[0]
+          if (archivo) onElegirArchivo(archivo)
+          e.target.value = ''
+        }}
       />
 
-      <button type="button" className="boton" onClick={() => input.current?.click()}>
+      <button
+        type="button"
+        className="boton"
+        disabled={leyendo}
+        onClick={() => input.current?.click()}
+      >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9 }}>
           <IconoSubir />
-          Subir un estado
+          {leyendo ? 'Leyendo…' : 'Subir un estado'}
         </span>
       </button>
 
-      {pendiente ? (
-        <div className="aviso aviso-media">
-          <span className="aviso-titulo">{pendiente}</span>
-          <span className="aviso-texto">
-            {hayBackend
-              ? 'Listo para subir. La lectura automática llega en la fase 2.'
-              : 'Conecta Supabase para poder guardarlo. Mientras tanto, QuickView corre en modo demostración.'}
+      {leyendo ? (
+        <div className="tarjeta">
+          <span className="fila-nombre">{fase.archivo}</span>
+          <div className="progress" style={{ height: 4, borderRadius: 99, background: 'var(--surface-3)', overflow: 'hidden' }}>
+            <i
+              style={{
+                display: 'block',
+                height: '100%',
+                width: '45%',
+                background: 'var(--accent)',
+                borderRadius: 99,
+              }}
+            />
+          </div>
+          <span className="fila-detalle" style={{ whiteSpace: 'normal', lineHeight: 1.5 }}>
+            Tus PDF son imágenes, sin capa de texto, así que hay que leerlos página por página.
+            Tarda entre medio minuto y dos minutos.
           </span>
+        </div>
+      ) : null}
+
+      {fase.tipo === 'error' ? (
+        <div className="aviso aviso-alta">
+          <span className="aviso-titulo">No se pudo leer</span>
+          <span className="aviso-texto">{fase.mensaje}</span>
         </div>
       ) : null}
 
@@ -79,11 +105,14 @@ export function Estados({ estados }: { estados: EstadoGuardado[] }) {
                 <span className="fila-crece">
                   <span className="fila-nombre">{e.nombreArchivo}</span>
                   <span className="fila-detalle">
-                    {e.cuenta} · {e.paginas} {e.paginas === 1 ? 'página' : 'páginas'}
+                    {e.cuenta} · {e.movimientos}{' '}
+                    {e.movimientos === 1 ? 'movimiento' : 'movimientos'}
                   </span>
                 </span>
-                <span className={e.cuadre === 'ok' ? 'pildora pildora-azul' : 'pildora pildora-ambar'}>
-                  {e.cuadre === 'ok' ? 'Cuadra' : e.cuadre === 'con_descuadres' ? 'Revisar' : 'Sin leer'}
+                <span
+                  className={e.cuadre === 'ok' ? 'pildora pildora-azul' : 'pildora pildora-ambar'}
+                >
+                  {e.cuadre === 'ok' ? 'Cuadra' : e.cuadre === 'con_descuadres' ? 'Revisar' : 'Sin verificar'}
                 </span>
               </div>
               {e.desde && e.hasta ? (

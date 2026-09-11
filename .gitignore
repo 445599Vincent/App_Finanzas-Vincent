@@ -7,6 +7,9 @@ dist/
 # Estados de cuenta reales: nunca entran al repositorio.
 estados/
 *.pdf
+# Unica excepcion: los estados SINTETICOS de prueba, que son inventados y
+# hacen falta para que la prueba de extremo a extremo pueda correr.
+!pruebas/fixtures/*.pdf
 
 # Artefactos de compilacion
 *.tsbuildinfo

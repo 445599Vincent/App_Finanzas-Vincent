@@ -213,12 +213,13 @@ create policy "catalogo abierto" on categories for select using (true);
 --
 -- Row Level Security decide QUE FILAS ve cada quien, pero antes que eso
 -- PostgreSQL decide si el rol puede tocar la tabla siquiera. Son dos capas
--- distintas y hacen falta las dos: sin el GRANT, PostgREST responde 403
--- "permission denied" aunque la politica de RLS sea perfectamente permisiva.
+-- distintas y hacen falta las dos.
 --
--- Esto se suele heredar de los privilegios por defecto del proyecto, pero
--- dejarlo escrito hace que el esquema funcione igual en cualquier proyecto,
--- nuevo o viejo, en vez de depender de como venga configurado.
+-- Supabase concede estos permisos por defecto en sus proyectos, asi que lo mas
+-- probable es que esto sea redundante. Va escrito igual para que el esquema no
+-- dependa de como venga configurado un proyecto en particular. No debilita
+-- nada: anon solo puede LEER el catalogo de categorias, y lo que toca
+-- authenticated sigue acotado por RLS a sus propias filas.
 
 grant usage on schema public to anon, authenticated;
 

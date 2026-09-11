@@ -1,13 +1,12 @@
--- Arreglo del 403 en categories.
+-- Permisos, sueltos.
 --
--- Este archivo es solo la parte de permisos de schema.sql, suelta, para poder
--- pegarla rapido desde el telefono sin copiar el esquema entero.
+-- Es solo la parte de GRANT de schema.sql, separada para poder pegarla rapido
+-- desde el telefono sin copiar el esquema entero.
 --
--- Row Level Security decide QUE FILAS ve cada quien, pero antes que eso
--- PostgreSQL decide si el rol puede tocar la tabla siquiera. Hacen falta las
--- dos: sin el GRANT, la respuesta es 403 aunque la politica sea permisiva.
---
--- Se puede correr las veces que haga falta.
+-- Correrlo solo hace falta si `npm run revisar` dice que categories responde
+-- 403 CON un mensaje de error de Supabase. Supabase concede estos permisos por
+-- defecto, asi que lo normal es que no haga falta. Se puede correr las veces
+-- que sea: no rompe nada.
 
 grant usage on schema public to anon, authenticated;
 

@@ -65,18 +65,45 @@ async function main() {
 
   const cabeceras = { apikey: llave, Authorization: `Bearer ${llave}` }
 
-  /** Devuelve {estado} o {error} — nunca lanza, para no cortar la revisión. */
+  /**
+   * Devuelve {estado, cuerpo}, {error} o {interceptado}. Nunca lanza.
+   *
+   * Lo de `interceptado` viene de una lección cara: un proxy corporativo de por
+   * medio devuelve 403 con un texto plano, y leer ESO como si fuera la
+   * respuesta de Supabase lleva a diagnosticar un problema de permisos que no
+   * existe. PostgREST siempre contesta JSON; si lo que llega no lo es, la
+   * respuesta no es de Supabase y no se puede concluir nada de ella.
+   */
   async function pedir(ruta) {
+    let r
     try {
-      const r = await fetch(`${url}${ruta}`, { headers: cabeceras })
-      return { estado: r.status, cuerpo: await r.text().catch(() => '') }
+      r = await fetch(`${url}${ruta}`, { headers: cabeceras })
     } catch (e) {
       return { error: e.message }
     }
+    const cuerpo = await r.text().catch(() => '')
+    if (!r.ok && comoJson(cuerpo) === null) {
+      return { interceptado: cuerpo.slice(0, 160) || `HTTP ${r.status} sin cuerpo` }
+    }
+    return { estado: r.status, cuerpo }
+  }
+
+  /** Corta la revisión cuando algo se interpuso: seguir solo daría datos falsos. */
+  function siInterceptado(r) {
+    if (!r.interceptado) return false
+    fallo(
+      'Algo se interpuso entre este equipo y Supabase',
+      `La respuesta no vino de tu proyecto sino de: ${r.interceptado}`,
+      'Suele ser un proxy, un cortafuegos o una VPN corporativa.',
+      'Corre esta revisión desde una red sin filtro; desde aquí no se',
+      'puede concluir nada sobre tu base de datos.',
+    )
+    return true
   }
 
   // 1. ¿Responde el proyecto?
   const raiz = await pedir('/rest/v1/')
+  if (siInterceptado(raiz)) return final()
   if (raiz.error) {
     fallo(
       `No se pudo conectar: ${raiz.error}`,
@@ -96,6 +123,7 @@ async function main() {
   // 2. El catálogo de categorías: es el único que se lee SIN sesión, así que
   //    es el mejor termómetro de si los permisos quedaron bien.
   const cat = await pedir('/rest/v1/categories?select=id')
+  if (siInterceptado(cat)) return final()
   if (cat.estado === 404 || cat.estado === 400) {
     fallo(
       'No existe la tabla categories: falta correr el esquema',
@@ -127,7 +155,7 @@ async function main() {
   const inexistentes = []
   for (const tabla of TABLAS_PRIVADAS) {
     const r = await pedir(`/rest/v1/${tabla}?select=*&limit=1`)
-    if (r.error) continue
+    if (r.error || r.interceptado) continue
     if (r.estado === 404 || r.estado === 400) inexistentes.push(tabla)
   }
   if (inexistentes.length > 0) {
@@ -141,7 +169,7 @@ async function main() {
 
   // 4. El bucket de los PDF originales.
   const bucket = await pedir('/storage/v1/bucket/estados')
-  if (bucket.error) {
+  if (bucket.error || bucket.interceptado) {
     gris('No se pudo comprobar el bucket de PDFs.')
   } else if (bucket.estado === 404) {
     fallo(
@@ -154,7 +182,7 @@ async function main() {
 
   // 5. El acceso por correo, que es como se entra.
   const ajustes = await pedir('/auth/v1/settings')
-  if (ajustes.error || !ajustes.cuerpo) {
+  if (ajustes.error || ajustes.interceptado || !ajustes.cuerpo) {
     gris('No se pudieron leer los ajustes de autenticación.')
   } else {
     const s = comoJson(ajustes.cuerpo)

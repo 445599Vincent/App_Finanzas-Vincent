@@ -110,9 +110,16 @@ antes de que llegue a tus números.
 
 6. Reinicia `npm run dev`. La app pasa a pedirte el correo.
 
-**Si `categories` sale bloqueada con 403**, corre `supabase/arreglo-permisos.sql`
-(son seis líneas, cómodas de pegar desde el teléfono) o vuelve a correr
-`schema.sql` entero: los dos son idempotentes. Row Level Security decide *qué filas* ve cada quien, pero antes que
+**Corre la revisión desde una red sin filtros.** Si hay un proxy, un cortafuegos
+o una VPN corporativa de por medio, la respuesta que llega puede ser del filtro y
+no de tu proyecto. Un 403 del proxy leído como si fuera de Supabase lleva a
+diagnosticar un problema de permisos que no existe — por eso la revisión ahora
+detecta ese caso y se niega a concluir nada en vez de inventarse un veredicto.
+
+**Si la revisión dice que `categories` responde 403 con un error de Supabase**,
+corre `supabase/arreglo-permisos.sql` (seis líneas, cómodas de pegar desde el
+teléfono). Supabase concede esos permisos por defecto, así que lo normal es que
+no haga falta. Row Level Security decide *qué filas* ve cada quien, pero antes que
 eso PostgreSQL decide si el rol puede tocar la tabla siquiera. Son dos capas
 distintas y hacen falta las dos — sin el `GRANT`, la respuesta es 403 aunque la
 política de seguridad sea perfectamente permisiva.

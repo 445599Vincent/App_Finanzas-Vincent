@@ -75,9 +75,21 @@ antes de que llegue a tus números.
 ## Conectar tu propia base
 
 1. Crea un proyecto gratis en [supabase.com](https://supabase.com).
+
 2. En **SQL Editor → New query**, pega y corre `supabase/schema.sql`, y después
    `supabase/seed.sql`.
-3. Copia `.env.example` a `.env` y llena los dos valores desde
+
+3. En **Authentication → URL Configuration**, añade las direcciones desde las
+   que vas a abrir la app:
+
+   - **Site URL**: la de Vercel, por ejemplo `https://quickview.vercel.app`
+   - **Redirect URLs**: esa misma y `http://localhost:5173`
+
+   Este paso es el que más tiempo hace perder si se salta. El enlace que llega
+   por correo apunta a una de estas direcciones; si la tuya no está en la lista,
+   Supabase lo rechaza y el enlace no entra a ningún lado.
+
+4. Copia `.env.example` a `.env` y llena los dos valores desde
    **Settings → API** de tu proyecto:
 
    ```
@@ -85,7 +97,15 @@ antes de que llegue a tus números.
    VITE_SUPABASE_ANON_KEY=eyJhbGci...
    ```
 
-4. Reinicia `npm run dev`. La cinta de "modo demostración" desaparece.
+5. Reinicia `npm run dev`. La app pasa a pedirte el correo.
+
+**Cómo funciona el login.** Sin contraseña: escribes tu correo, te llega un
+enlace y lo abres **en el mismo dispositivo**. No hay contraseña que recordar,
+que guardar ni que se pueda filtrar.
+
+Mientras no configures Supabase, la app no pide correo y guarda en tu teléfono.
+Obligar a crear una cuenta para usar algo que guarda en tu propio dispositivo no
+tendría sentido.
 
 Todas las tablas están protegidas con Row Level Security: cada fila pertenece a
 un usuario y nadie más puede leerla ni escribirla, ni siquiera con la llave
@@ -93,6 +113,17 @@ pública. Los PDFs van a un bucket privado.
 
 **QuickView nunca te pide las claves de tu banco.** No se conecta al Popular ni
 a ningún agregador. Solo lee el PDF que tú subes.
+
+### Desplegar en Vercel
+
+Importa el repositorio en [vercel.com](https://vercel.com) y añade en
+**Settings → Environment Variables** las tres variables: las dos de Supabase y
+`ANTHROPIC_API_KEY`. Vercel detecta Vite solo y convierte cada archivo de `api/`
+en una función.
+
+**Nunca subas el `.env` al repositorio.** Ya está en `.gitignore`; si alguna vez
+una llave llega a un commit, dala por quemada y génerala de nuevo — borrarla
+después no la borra del historial.
 
 ---
 
@@ -182,7 +213,8 @@ src/lib/         el motor, sin nada de interfaz
   almacen.ts       la interfaz de datos y la versión que guarda en el teléfono
   almacenSupabase.ts la misma interfaz contra Postgres
   crearAlmacen.ts  elige cuál usar según haya sesión o no
-src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión · Cuenta · Reporte
+  sesion.ts        la sesión de Supabase, leída de su API
+src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión · Cuenta · Reporte · Entrar
 public/sw.js     service worker: la app abre sin internet
 src/data/demo.ts datos de ejemplo (inventados, no son estados reales)
 supabase/        schema.sql y seed.sql

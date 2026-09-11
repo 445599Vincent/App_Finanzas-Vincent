@@ -7,10 +7,12 @@ import { Criterio } from './screens/Criterio'
 import { Revision, type Revisado } from './screens/Revision'
 import { Cuenta } from './screens/Cuenta'
 import { Reporte } from './screens/Reporte'
+import { Entrar } from './screens/Entrar'
 import { EditorCategoria } from './components/EditorCategoria'
 import { IconoResumen, IconoMovimientos, IconoEstados, IconoCriterio } from './components/Iconos'
 import { leerEstado, hashDe } from './lib/leer'
-import { subirEstado, enlaceDeDescarga, hayBackend, supabase } from './lib/supabase'
+import { subirEstado, enlaceDeDescarga, supabase } from './lib/supabase'
+import { useSesion, salir } from './lib/sesion'
 import { normalizarEstado, type EstadoNormalizado } from './lib/normalizar'
 import { reglaDesde } from './lib/categories'
 import { emparejarTraslados } from './lib/transfers'
@@ -39,7 +41,12 @@ const DEMO: Datos = {
 }
 
 export default function App() {
-  const [almacen] = useState<Almacen>(() => crearAlmacen())
+  const sesion = useSesion()
+  const userId = sesion.tipo === 'dentro' ? sesion.userId : null
+
+  // El almacén se rehace cuando cambia la sesión: entrar o salir cambia dónde
+  // viven los datos, y las pantallas no tienen por qué enterarse.
+  const almacen = useMemo<Almacen>(() => crearAlmacen(userId), [userId])
   const [datos, setDatos] = useState<Datos>(DATOS_VACIOS)
   const [cargando, setCargando] = useState(true)
 
@@ -110,12 +117,9 @@ export default function App() {
       // bajarlo. Sin Supabase no hay dónde: el navegador no aguanta guardar
       // archivos de medio mega por estado.
       let archivoPath: string | undefined
-      if (hayBackend && supabase && archivoLeido.archivo) {
+      if (userId && supabase && archivoLeido.archivo) {
         try {
-          const { data } = await supabase.auth.getUser()
-          if (data.user) {
-            archivoPath = await subirEstado(data.user.id, archivoLeido.archivo, archivoLeido.hash)
-          }
+          archivoPath = await subirEstado(userId, archivoLeido.archivo, archivoLeido.hash)
         } catch {
           // Que falle la copia del PDF no puede costarte los movimientos ya
           // leídos: se guardan igual y el original queda sin subir.
@@ -151,7 +155,7 @@ export default function App() {
       setLectura(null)
       setPestana('movimientos')
     },
-    [lectura, datos.cuentas, archivoLeido, almacen],
+    [lectura, datos.cuentas, archivoLeido, almacen, userId],
   )
 
   const guardarCategoria = useCallback(
@@ -181,6 +185,26 @@ export default function App() {
     if (internos.size === 0) return vista.txns
     return vista.txns.map((t) => (internos.has(t.id) ? { ...t, esInterno: true } : t))
   }, [vista.txns, vista.cuentas])
+
+  // Con Supabase configurado hace falta sesión: cada fila se guarda con su
+  // user_id y las políticas de seguridad no admiten filas sin dueño.
+  if (sesion.tipo === 'cargando') {
+    return (
+      <div className="app">
+        <div className="vista">
+          <span className="epigrafe">Comprobando tu sesión…</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (sesion.tipo === 'fuera') {
+    return (
+      <div className="app">
+        <Entrar />
+      </div>
+    )
+  }
 
   if (cargando) {
     return (
@@ -226,6 +250,15 @@ export default function App() {
       {esDemo ? (
         <div className="cinta-demo">
           Datos de ejemplo · desaparecen cuando subas tu primer estado
+        </div>
+      ) : null}
+
+      {sesion.tipo === 'dentro' ? (
+        <div className="cinta-sesion">
+          <span>{sesion.correo ?? 'Sesión iniciada'}</span>
+          <button type="button" className="enlace" onClick={() => void salir()}>
+            Salir
+          </button>
         </div>
       ) : null}
 

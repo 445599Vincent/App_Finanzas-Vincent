@@ -97,7 +97,24 @@ antes de que llegue a tus números.
    VITE_SUPABASE_ANON_KEY=eyJhbGci...
    ```
 
-5. Reinicia `npm run dev`. La app pasa a pedirte el correo.
+5. Comprueba que todo quedó bien:
+
+   ```bash
+   npm run revisar
+   ```
+
+   Te dice, una por una, si el proyecto responde, si están las diez tablas, si
+   el catálogo de categorías se lee, si existe el bucket de los PDF y si el
+   acceso por correo está activo. Cuando algo falla dice qué hacer, no solo
+   que falló.
+
+6. Reinicia `npm run dev`. La app pasa a pedirte el correo.
+
+**Si `categories` sale bloqueada con 403**, vuelve a correr `schema.sql`: es
+idempotente. Row Level Security decide *qué filas* ve cada quien, pero antes que
+eso PostgreSQL decide si el rol puede tocar la tabla siquiera. Son dos capas
+distintas y hacen falta las dos — sin el `GRANT`, la respuesta es 403 aunque la
+política de seguridad sea perfectamente permisiva.
 
 **Cómo funciona el login.** Sin contraseña: escribes tu correo, te llega un
 enlace y lo abres **en el mismo dispositivo**. No hay contraseña que recordar,

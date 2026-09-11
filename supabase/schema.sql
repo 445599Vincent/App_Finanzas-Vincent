@@ -209,6 +209,29 @@ end $$;
 drop policy if exists "catalogo abierto" on categories;
 create policy "catalogo abierto" on categories for select using (true);
 
+-- ------------------------------------------------------------------ permisos
+--
+-- Row Level Security decide QUE FILAS ve cada quien, pero antes que eso
+-- PostgreSQL decide si el rol puede tocar la tabla siquiera. Son dos capas
+-- distintas y hacen falta las dos: sin el GRANT, PostgREST responde 403
+-- "permission denied" aunque la politica de RLS sea perfectamente permisiva.
+--
+-- Esto se suele heredar de los privilegios por defecto del proyecto, pero
+-- dejarlo escrito hace que el esquema funcione igual en cualquier proyecto,
+-- nuevo o viejo, en vez de depender de como venga configurado.
+
+grant usage on schema public to anon, authenticated;
+
+-- El catalogo de categorias lo lee cualquiera, incluso sin sesion iniciada.
+grant select on categories to anon, authenticated;
+
+-- Las tablas con datos tuyos solo las toca alguien con sesion, y aun asi RLS
+-- lo limita a sus propias filas.
+grant select, insert, update, delete on
+  accounts, statements, card_cycles, card_snapshots, transactions,
+  transfer_links, rules, budgets, recurring, alerts
+  to authenticated;
+
 -- ------------------------------------------------------- almacenamiento de PDFs
 
 insert into storage.buckets (id, name, public)

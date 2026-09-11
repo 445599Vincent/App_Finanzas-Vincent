@@ -28,6 +28,13 @@ export default [
     },
   },
   {
+    // Los scripts de línea de comandos corren en Node, no en el navegador.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly', fetch: 'readonly', URL: 'readonly' },
+    },
+  },
+  {
     files: ['public/sw.js'],
     languageOptions: { globals: { self: 'readonly', caches: 'readonly', fetch: 'readonly', Response: 'readonly', URL: 'readonly' } },
   },

@@ -1,0 +1,78 @@
+/* Sistema visual de QuickView.
+   Minimalista, mucho aire, una sola accion clara por pantalla.
+   Los tres estados de tema: claro, oscuro por sistema, y oscuro por eleccion. */
+
+:root {
+  --ground: #FBFBFD;
+  --surface: #FFFFFF;
+  --surface-2: #F4F4F7;
+  --surface-3: #EDEDF1;
+  --line: #E2E2E8;
+  --line-soft: #EFEFF3;
+  --ink: #1D1D1F;
+  --ink-2: #6E6E76;
+  --ink-3: #9B9BA3;
+  --accent: #0A66E8;
+  --accent-soft: #E9F0FD;
+  --accent-ink: #0A5BCC;
+  --pos: #0B7A54;
+  --pos-soft: #E6F4EE;
+  --neg: #C0392F;
+  --neg-soft: #FBECEA;
+  --warn: #9C6708;
+  --warn-soft: #FBF2E2;
+  --shadow: 0 1px 2px rgba(20, 20, 30, .05), 0 12px 32px -12px rgba(20, 20, 30, .14);
+
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Manrope",
+             "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A0A0C;
+    --surface: #151518;
+    --surface-2: #1D1D21;
+    --surface-3: #26262B;
+    --line: #2D2D33;
+    --line-soft: #232328;
+    --ink: #F4F4F7;
+    --ink-2: #A2A2AB;
+    --ink-3: #6E6E78;
+    --accent: #4F9BFF;
+    --accent-soft: #14243C;
+    --accent-ink: #7FB6FF;
+    --pos: #3FC593;
+    --pos-soft: #10261F;
+    --neg: #FF7566;
+    --neg-soft: #2B1512;
+    --warn: #E2A544;
+    --warn-soft: #2A2013;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -12px rgba(0, 0, 0, .6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground: #0A0A0C;
+  --surface: #151518;
+  --surface-2: #1D1D21;
+  --surface-3: #26262B;
+  --line: #2D2D33;
+  --line-soft: #232328;
+  --ink: #F4F4F7;
+  --ink-2: #A2A2AB;
+  --ink-3: #6E6E78;
+  --accent: #4F9BFF;
+  --accent-soft: #14243C;
+  --accent-ink: #7FB6FF;
+  --pos: #3FC593;
+  --pos-soft: #10261F;
+  --neg: #FF7566;
+  --neg-soft: #2B1512;
+  --warn: #E2A544;
+  --warn-soft: #2A2013;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -12px rgba(0, 0, 0, .6);
+}

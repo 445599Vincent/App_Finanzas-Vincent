@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+*.local
+
+# Estados de cuenta reales: nunca entran al repositorio.
+estados/
+*.pdf
+
+# Artefactos de compilacion
+*.tsbuildinfo

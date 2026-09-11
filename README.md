@@ -110,8 +110,9 @@ antes de que llegue a tus números.
 
 6. Reinicia `npm run dev`. La app pasa a pedirte el correo.
 
-**Si `categories` sale bloqueada con 403**, vuelve a correr `schema.sql`: es
-idempotente. Row Level Security decide *qué filas* ve cada quien, pero antes que
+**Si `categories` sale bloqueada con 403**, corre `supabase/arreglo-permisos.sql`
+(son seis líneas, cómodas de pegar desde el teléfono) o vuelve a correr
+`schema.sql` entero: los dos son idempotentes. Row Level Security decide *qué filas* ve cada quien, pero antes que
 eso PostgreSQL decide si el rol puede tocar la tabla siquiera. Son dos capas
 distintas y hacen falta las dos — sin el `GRANT`, la respuesta es 403 aunque la
 política de seguridad sea perfectamente permisiva.

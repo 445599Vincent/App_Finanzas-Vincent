@@ -22,10 +22,10 @@ describe('cargos que se repiten solos', () => {
   it('detecta tambien un ritmo quincenal, que un filtro mensual se perderia', () => {
     // En los estados reales el cargo mas regular caia cada 10-14 dias.
     const txns = [
-      t('1', '2026-06-13', 'BARBER LAB', -1000),
-      t('2', '2026-06-25', 'BARBER LAB', -1000),
-      t('3', '2026-07-03', 'BARBER LAB', -1000),
-      t('4', '2026-07-17', 'BARBER LAB', -1000),
+      t('1', '2026-06-13', 'BARBERIA CENTRAL', -1000),
+      t('2', '2026-06-25', 'BARBERIA CENTRAL', -1000),
+      t('3', '2026-07-03', 'BARBERIA CENTRAL', -1000),
+      t('4', '2026-07-17', 'BARBERIA CENTRAL', -1000),
     ]
     const rs = detectarRecurrentes(txns)
     expect(rs).toHaveLength(1)
@@ -34,15 +34,15 @@ describe('cargos que se repiten solos', () => {
   })
 
   it('no llama recurrente a algo que solo aparecio dos veces', () => {
-    const txns = [t('1', '2026-06-13', 'KFC ARROYO HONDO', -1414), t('2', '2026-07-13', 'KFC ARROYO HONDO', -1414)]
+    const txns = [t('1', '2026-06-13', 'KFC', -1414), t('2', '2026-07-13', 'KFC', -1414)]
     expect(detectarRecurrentes(txns)).toHaveLength(0)
   })
 
   it('no llama recurrente a un comercio con montos muy distintos', () => {
     const txns = [
-      t('1', '2026-06-13', 'SHELL VASQUEZ', -580),
-      t('2', '2026-07-13', 'SHELL VASQUEZ', -3406),
-      t('3', '2026-08-13', 'SHELL VASQUEZ', -600),
+      t('1', '2026-06-13', 'ESTACION SHELL', -580),
+      t('2', '2026-07-13', 'ESTACION SHELL', -3406),
+      t('3', '2026-08-13', 'ESTACION SHELL', -600),
     ]
     expect(detectarRecurrentes(txns)).toHaveLength(0)
   })
@@ -68,9 +68,9 @@ describe('cargos que se repiten solos', () => {
 
   it('suma lo que cuestan al mes, normalizando el ritmo', () => {
     const quincenal = [
-      t('1', '2026-06-01', 'BARBER LAB', -1000),
-      t('2', '2026-06-15', 'BARBER LAB', -1000),
-      t('3', '2026-06-29', 'BARBER LAB', -1000),
+      t('1', '2026-06-01', 'BARBERIA CENTRAL', -1000),
+      t('2', '2026-06-15', 'BARBERIA CENTRAL', -1000),
+      t('3', '2026-06-29', 'BARBERIA CENTRAL', -1000),
     ]
     // Cada 14 dias a RD$1,000 son unos RD$2,143 al mes, no RD$1,000.
     expect(costoMensual(detectarRecurrentes(quincenal))).toBeGreaterThan(2000)
@@ -78,9 +78,9 @@ describe('cargos que se repiten solos', () => {
 
   it('ignora los traslados internos', () => {
     const txns: Txn[] = [
-      { ...t('1', '2026-06-01', 'PagoTC Via MB***3208', -10000), esInterno: true },
-      { ...t('2', '2026-07-01', 'PagoTC Via MB***3208', -10000), esInterno: true },
-      { ...t('3', '2026-08-01', 'PagoTC Via MB***3208', -10000), esInterno: true },
+      { ...t('1', '2026-06-01', 'PagoTC Via MB***9090', -10000), esInterno: true },
+      { ...t('2', '2026-07-01', 'PagoTC Via MB***9090', -10000), esInterno: true },
+      { ...t('3', '2026-08-01', 'PagoTC Via MB***9090', -10000), esInterno: true },
     ]
     expect(detectarRecurrentes(txns)).toHaveLength(0)
   })

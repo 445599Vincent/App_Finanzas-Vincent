@@ -22,7 +22,7 @@ const PRESUPUESTOS_DEMO = { restaurantes: 8000, combustible: 9000 }
 const ESTADOS_DEMO: EstadoGuardado[] = [
   {
     id: 'e1',
-    nombreArchivo: 'Estado de Cuenta ••••6220.pdf',
+    nombreArchivo: 'Estado de Cuenta ••••2233.pdf',
     cuenta: 'Corriente operativa',
     clase: 'cuenta',
     desde: '2026-05-24',
@@ -33,7 +33,7 @@ const ESTADOS_DEMO: EstadoGuardado[] = [
   },
   {
     id: 'e2',
-    nombreArchivo: 'Estado de Cuenta ••••3461.pdf',
+    nombreArchivo: 'Estado de Cuenta ••••5566.pdf',
     cuenta: 'Corriente principal',
     clase: 'cuenta',
     desde: '2026-05-24',
@@ -44,7 +44,7 @@ const ESTADOS_DEMO: EstadoGuardado[] = [
   },
   {
     id: 'e3',
-    nombreArchivo: 'Tarjeta ••••3208 · corte 10/08.pdf',
+    nombreArchivo: 'Tarjeta ••••9090 · corte 10/08.pdf',
     cuenta: 'Tarjeta de crédito',
     clase: 'tarjeta',
     desde: '2026-07-10',

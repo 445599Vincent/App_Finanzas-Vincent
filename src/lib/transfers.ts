@@ -12,10 +12,10 @@ import { round2 } from './reconcile'
  *
  * Las dos familias que aparecen en los estados del Popular:
  *
- *   Cuenta -> Cuenta    "Transf. via MB a 839453461"
- *                       "Transf. via MB desde 814726220"
+ *   Cuenta -> Cuenta    "Transf. via MB a 700445566"
+ *                       "Transf. via MB desde 700112233"
  *
- *   Cuenta -> Tarjeta   "PagoTC Via MB***3208"
+ *   Cuenta -> Tarjeta   "PagoTC Via MB***9090"
  *                       "Pago Via App"            (del lado de la tarjeta)
  *
  * El emparejamiento exige monto identico y fechas cercanas. La tarjeta suele
@@ -29,7 +29,7 @@ const RE_A_CUENTA = /\bdesde\s+(\d{6,})/i
 const RE_HACIA_CUENTA = /\ba\s+(\d{6,})/i
 const RE_PAGO_TC = /pago\s*tc|pagotc/i
 const RE_PAGO_TARJETA = /pago\s+v[ií]a\s+app|pago\s+recibido|pago\s+en\s+l[ií]nea/i
-/** "PagoTC Via MB***3208" -> 3208 */
+/** "PagoTC Via MB***9090" -> 3208 */
 const RE_ULTIMOS4 = /(\d{4})\s*$/
 
 export interface OpcionesTraslado {
@@ -108,7 +108,7 @@ interface Destino {
 function destinoDe(salida: Txn, cuentas: Account[]): Destino | null {
   const d = salida.descripcion
 
-  // "Transf. via MB a 839453461"
+  // "Transf. via MB a 700445566"
   const mCuenta = RE_HACIA_CUENTA.exec(d)
   if (mCuenta) {
     const num = mCuenta[1]
@@ -118,7 +118,7 @@ function destinoDe(salida: Txn, cuentas: Account[]): Destino | null {
     if (cuenta) return { cuenta, metodo: 'transferencia', explicito: true }
   }
 
-  // "PagoTC Via MB***3208"
+  // "PagoTC Via MB***9090"
   if (RE_PAGO_TC.test(d)) {
     const m4 = RE_ULTIMOS4.exec(d.trim())
     if (m4) {

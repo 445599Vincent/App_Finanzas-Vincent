@@ -8,7 +8,7 @@ const fmtCorto = new Intl.NumberFormat('es-DO', {
   maximumFractionDigits: 0,
 })
 
-/** RD$ 26,031.31 */
+/** RD$ 28,440.60 */
 export function pesos(n: number): string {
   return `RD$ ${fmt.format(Math.abs(n))}`
 }

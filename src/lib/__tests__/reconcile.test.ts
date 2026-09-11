@@ -19,12 +19,14 @@ function t(p: Partial<Txn> & { monto: number; balance?: number }): Txn {
 }
 
 describe('cuadre de una cuenta corriente', () => {
+  // Cadena inventada, pero con la forma exacta de un estado del Popular:
+  // saldo[i-1] + monto[i] === saldo[i], con el menos al final en los debitos.
   const cadenaBuena: Txn[] = [
-    t({ fecha: '2026-05-24', descripcion: 'Transf. via MB a 839453461', monto: -30, balance: 10430.44 }),
-    t({ fecha: '2026-05-29', descripcion: 'Transf App Neg', monto: 50000, balance: 60430.44 }),
-    t({ fecha: '2026-05-30', descripcion: 'PagoTC Via MB***3208', monto: -12932.26, balance: 47498.18 }),
-    t({ fecha: '2026-05-30', descripcion: 'PagoTC Via MB***3208', monto: -20000, balance: 27498.18 }),
-    t({ fecha: '2026-05-30', descripcion: 'Transf. via MB a 839453461', monto: -22000, balance: 5498.18 }),
+    t({ fecha: '2026-05-24', descripcion: 'Transf. via MB a 700445566', monto: -30, balance: 12270.00 }),
+    t({ fecha: '2026-05-29', descripcion: 'Transf App Neg', monto: 50000, balance: 62270.00 }),
+    t({ fecha: '2026-05-30', descripcion: 'PagoTC Via MB***9090', monto: -14275.80, balance: 47994.20 }),
+    t({ fecha: '2026-05-30', descripcion: 'PagoTC Via MB***9090', monto: -20000, balance: 27994.20 }),
+    t({ fecha: '2026-05-30', descripcion: 'Transf. via MB a 700445566', monto: -22000, balance: 5994.20 }),
   ]
 
   it('acepta una cadena de saldos que cuadra al centavo', () => {
@@ -35,19 +37,19 @@ describe('cuadre de una cuenta corriente', () => {
   })
 
   it('deduce el saldo del que se parte', () => {
-    // 10,430.44 es el saldo DESPUES del primer movimiento de -30.
-    expect(cuadrarCuenta(cadenaBuena).saldoInicial).toBe(10460.44)
+    // 12,270.00 es el saldo DESPUES del primer movimiento de -30.
+    expect(cuadrarCuenta(cadenaBuena).saldoInicial).toBe(12300)
   })
 
   it('senala exactamente cual linea no cuadra', () => {
     const mala = [...cadenaBuena]
-    mala[2] = t({ fecha: '2026-05-30', descripcion: 'PagoTC Via MB***3208', monto: -12932.26, balance: 47498.99 })
+    mala[2] = t({ fecha: '2026-05-30', descripcion: 'PagoTC Via MB***9090', monto: -14275.80, balance: 47995.01 })
     const r = cuadrarCuenta(mala)
     expect(r.ok).toBe(false)
     expect(r.descuadres).toHaveLength(2) // la mala, y la siguiente que arrastra
     expect(r.descuadres[0].indice).toBe(2)
     expect(r.descuadres[0].descripcion).toContain('PagoTC')
-    expect(r.descuadres[0].balanceEsperado).toBe(47498.18)
+    expect(r.descuadres[0].balanceEsperado).toBe(47994.2)
   })
 
   it('detecta un signo invertido, que es el error mas probable', () => {
@@ -63,17 +65,17 @@ describe('cuadre de una cuenta corriente', () => {
     // Sin saldo anterior no hay contra que contrastarla: si su monto se leyo
     // mal, la cadena sigue cuadrando y solo se corre el saldo inicial deducido.
     const conPrimeraMala = [...cadenaBuena]
-    conPrimeraMala[0] = t({ fecha: '2026-05-24', monto: 30, balance: 10430.44 })
+    conPrimeraMala[0] = t({ fecha: '2026-05-24', monto: 30, balance: 12270.00 })
     const r = cuadrarCuenta(conPrimeraMala)
     expect(r.ok).toBe(true)
     expect(r.primeraSinVerificar).toBe(true)
-    expect(r.saldoInicial).toBe(10400.44) // corrido, justamente por eso se marca
+    expect(r.saldoInicial).toBe(12240) // corrido, justamente por eso se marca
   })
 
   it('compara el saldo final contra el Balance Actual del encabezado', () => {
     const r = cuadrarCuenta(cadenaBuena)
-    expect(cuadraConEncabezado(r, 5498.18)).toBe(true)
-    expect(cuadraConEncabezado(r, 5498.19)).toBe(false)
+    expect(cuadraConEncabezado(r, 5994.2)).toBe(true)
+    expect(cuadraConEncabezado(r, 5994.21)).toBe(false)
   })
 
   it('avisa cuando no hay columna de saldo, en vez de fingir que cuadro', () => {
@@ -90,14 +92,14 @@ describe('cuadre de una tarjeta, que no trae saldo corrido', () => {
       t({ monto: -2000 }), // consumo
       t({ monto: 15000 }), // pago a favor
     ]
-    // Debia 38,419.92; consumio 3,414.99 y abono 15,000.
-    const r = cuadrarTarjeta(ciclo, 38419.92, 26834.91)
+    // Debia 42,150.75; consumio 3,414.99 y abono 15,000.
+    const r = cuadrarTarjeta(ciclo, 42150.75, 30565.74)
     expect(r.ok).toBe(true)
-    expect(r.deudaCalculada).toBe(26834.91)
+    expect(r.deudaCalculada).toBe(30565.74)
   })
 
   it('reporta la diferencia cuando falta un movimiento', () => {
-    const r = cuadrarTarjeta([t({ monto: -1414.99 })], 38419.92, 26834.91)
+    const r = cuadrarTarjeta([t({ monto: -1414.99 })], 42150.75, 30565.74)
     expect(r.ok).toBe(false)
     expect(Math.abs(r.diferencia)).toBeGreaterThan(0)
   })

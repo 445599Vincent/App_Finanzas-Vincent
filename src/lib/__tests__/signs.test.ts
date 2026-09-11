@@ -10,8 +10,8 @@ describe('convencion de signo del Banco Popular', () => {
   describe('cuenta corriente: el menos va AL FINAL y significa debito', () => {
     it('lee un debito escrito con menos al final', () => {
       expect(montoDe('RD$ 30.00-', 'cuenta')).toBe(-30)
-      expect(montoDe('RD$ 12,932.26-', 'cuenta')).toBe(-12932.26)
-      expect(montoDe('RD$ 58,291.84-', 'cuenta')).toBe(-58291.84)
+      expect(montoDe('RD$ 14,275.80-', 'cuenta')).toBe(-14275.80)
+      expect(montoDe('RD$ 61,330.15-', 'cuenta')).toBe(-61330.15)
     })
 
     it('lee un credito cuando no hay menos', () => {
@@ -28,13 +28,13 @@ describe('convencion de signo del Banco Popular', () => {
   describe('tarjeta: el menos va AL INICIO y significa abono a tu favor', () => {
     it('trata un consumo sin menos como aumento de deuda', () => {
       expect(montoDe('RD$ 1,414.99', 'tarjeta')).toBe(-1414.99)
-      expect(montoDe('RD$ 6,436.03', 'tarjeta')).toBe(-6436.03)
+      expect(montoDe('RD$ 5,218.40', 'tarjeta')).toBe(-5218.4)
     })
 
     it('trata el menos delantero como pago o devolucion', () => {
       expect(montoDe('RD$ -15,000.00', 'tarjeta')).toBe(15000)
       expect(montoDe('RD$ -1,375.00', 'tarjeta')).toBe(1375)
-      expect(montoDe('RD$ -38,419.92', 'tarjeta')).toBe(38419.92)
+      expect(montoDe('RD$ -42,150.75', 'tarjeta')).toBe(42150.75)
     })
   })
 

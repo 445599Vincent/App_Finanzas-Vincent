@@ -11,6 +11,7 @@ export function Resumen({
   ciclos,
   hoy,
   onVerCuenta,
+  onVerReporte,
 }: {
   cuentas: Account[]
   saldos: Record<string, number>
@@ -18,6 +19,7 @@ export function Resumen({
   ciclos: CardCycle[]
   hoy: string
   onVerCuenta: (id: string) => void
+  onVerReporte?: () => void
 }) {
   const posicionNeta = cuentas.reduce((a, c) => a + (saldos[c.id] ?? 0), 0)
   const resumen = resumirGastoReal(txns)
@@ -70,6 +72,12 @@ export function Resumen({
             Paga completo y no generas intereses.
           </span>
         </div>
+      ) : null}
+
+      {onVerReporte ? (
+        <button type="button" className="boton boton-suave" onClick={onVerReporte}>
+          Ver el reporte del mes
+        </button>
       ) : null}
 
       {resumen.movimientosInternos > 0 ? (

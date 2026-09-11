@@ -25,7 +25,8 @@ que muestran todas las pantallas funcionando.
 Otros comandos:
 
 ```bash
-npm test          # 48 pruebas del motor de lectura
+npm test          # 101 pruebas del motor
+npm run lint      # incluye rules-of-hooks
 npm run build     # compila a dist/
 npm run typecheck # revisa tipos sin compilar
 ```
@@ -130,6 +131,20 @@ Una limitación que la app declara en vez de esconder: **la primera línea de un
 estado no se puede verificar**, porque no hay saldo anterior contra el cual
 contrastarla. La pantalla de revisión siempre la marca.
 
+Tres decisiones del reporte, por si te preguntas por qué se ve así:
+
+- **Los totales del mes van como cifras, no como gráfica.** Son tres números;
+  una dona de tres porciones se lee peor que tres números bien puestos.
+- **Las gráficas usan un solo tono.** Son de una sola serie: la posición y la
+  etiqueta ya identifican cada barra, así que pintarlas de colores distintos
+  sería colorear por rango, que no añade información.
+- **Los valores van escritos al lado de cada barra, no en un tooltip.** En un
+  teléfono no hay hover, y un dato que hay que perseguir no es un dato.
+
+La severidad de las alertas va **escrita además de en color**: medidos, el ámbar
+y el rojo quedan a una distancia perceptual de 2.0 en deuteranopia —
+indistinguibles. El color solo nunca debe cargar el significado.
+
 Las categorías **aprenden**: cuando corriges una, la corrección se guarda como
 regla y se aplica también a lo que ya tenías guardado de ese mismo comercio.
 Arreglar el pasado, no solo el futuro — y de ahí en adelante tu criterio le gana
@@ -162,10 +177,13 @@ src/lib/         el motor, sin nada de interfaz
   esquemaEstado.ts la forma de lo que devuelve Claude
   normalizar.ts    de la transcripción a movimientos con signo resuelto
   leer.ts          cliente del navegador para /api/leer-estado
+  reporte.ts       los números del reporte mensual
+  exportar.ts      hoja de cálculo y descargas
   almacen.ts       la interfaz de datos y la versión que guarda en el teléfono
   almacenSupabase.ts la misma interfaz contra Postgres
   crearAlmacen.ts  elige cuál usar según haya sesión o no
-src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión · Cuenta
+src/screens/     Resumen · Movimientos · Estados · Criterio · Revisión · Cuenta · Reporte
+public/sw.js     service worker: la app abre sin internet
 src/data/demo.ts datos de ejemplo (inventados, no son estados reales)
 supabase/        schema.sql y seed.sql
 ```
@@ -190,4 +208,7 @@ excluye `*.pdf` y la carpeta `estados/`.
       teléfono y Supabase. Las pantallas no saben cuál está activa, así que
       conectar Supabase después no obliga a tocar interfaz.
 - [ ] **Fase 4 — Criterio con notificaciones** antes de cada vencimiento.
-- [ ] **Fase 5 — Reporte mensual en PDF**, exportación a Excel y modo sin conexión.
+- [x] **Fase 5 — Reporte mensual, exportación y sin conexión.** Reporte por mes
+      con gráficas, guardado en PDF por la ventana de imprimir del teléfono,
+      exportación a hoja de cálculo, descarga del PDF original y un service
+      worker para que la app abra sin internet.

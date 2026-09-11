@@ -429,3 +429,100 @@ button {
   flex: none;
   accent-color: var(--accent);
 }
+
+/* ----------------------------------------------------------------- reporte */
+
+.tiras { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.barras { align-items: stretch; height: 120px; }
+
+.barra-col { justify-content: flex-end; }
+
+.barra-valor {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+  min-height: 13px;
+}
+
+.barra-rotulo-activo { color: var(--accent); font-weight: 600; }
+
+.cat { display: flex; flex-direction: column; gap: 5px; }
+
+.cat-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+.cat-nombre {
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -.012em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-pista {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+/* Una sola serie, un solo tono: la posición y la etiqueta ya identifican
+   cada barra, así que colorearlas distinto no añadiría información. */
+.cat-barra {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+/* ------------------------------------------------------------- al imprimir */
+
+@media print {
+  .no-imprimir, .pestanas, .cinta-demo { display: none !important; }
+
+  body { background: #fff; color: #000; }
+
+  /* Sin esto el alto elástico de la pantalla deja media página en blanco. */
+  .app { max-width: none; min-height: auto; display: block; }
+  .vista { flex: none; }
+
+  .vista-reporte { padding: 0; gap: 20px; }
+
+  /* Se protege cada renglón, no el bloque entero: proteger el bloque completo
+     empuja una lista larga a la página siguiente y deja un hueco enorme. */
+  .cat, .fila, .tarjeta { break-inside: avoid; }
+  .rotulo { break-after: avoid; }
+
+  .barra { background: #d8d8de !important; }
+  .barra-activa, .cat-barra { background: #0A66E8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .monto-pos { color: #0B7A54 !important; }
+  .monto-neg { color: #C0392F !important; }
+}
+
+/* La severidad va escrita además de en color: medido, el ámbar y el rojo
+   quedan a delta-E 2.0 en deuteranopia, indistinguibles. */
+.aviso-severidad {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+
+.aviso-alta .aviso-severidad { color: var(--neg); }
+.aviso-media .aviso-severidad { color: var(--warn); }
+.aviso-info .aviso-severidad { color: var(--ink-3); }
+
+.enlace {
+  align-self: flex-start;
+  padding: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.enlace:active { opacity: .6; }

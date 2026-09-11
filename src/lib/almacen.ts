@@ -23,6 +23,8 @@ export interface EstadoArchivado {
   cuadre: 'ok' | 'con_descuadres' | 'sin_verificar'
   /** Huella del PDF: impide subir dos veces el mismo archivo. */
   hash?: string
+  /** Ruta del PDF original guardado. Sin esto no hay descarga del original. */
+  archivoPath?: string
 }
 
 export interface Datos {

@@ -6,9 +6,11 @@ import { Estados, type FaseLectura } from './screens/Estados'
 import { Criterio } from './screens/Criterio'
 import { Revision, type Revisado } from './screens/Revision'
 import { Cuenta } from './screens/Cuenta'
+import { Reporte } from './screens/Reporte'
 import { EditorCategoria } from './components/EditorCategoria'
 import { IconoResumen, IconoMovimientos, IconoEstados, IconoCriterio } from './components/Iconos'
 import { leerEstado, hashDe } from './lib/leer'
+import { subirEstado, enlaceDeDescarga, hayBackend, supabase } from './lib/supabase'
 import { normalizarEstado, type EstadoNormalizado } from './lib/normalizar'
 import { reglaDesde } from './lib/categories'
 import { emparejarTraslados } from './lib/transfers'
@@ -43,11 +45,18 @@ export default function App() {
 
   const [pestana, setPestana] = useState<Pestana>('resumen')
   const [cuentaAbierta, setCuentaAbierta] = useState<string | null>(null)
+  const [verReporte, setVerReporte] = useState(false)
   const [editando, setEditando] = useState<Txn | null>(null)
 
   const [fase, setFase] = useState<FaseLectura>({ tipo: 'listo' })
   const [lectura, setLectura] = useState<EstadoNormalizado | null>(null)
-  const [archivoLeido, setArchivoLeido] = useState({ nombre: '', hash: '' })
+  // El File se conserva para poder subir el PDF original al confirmar: el
+  // archivo se guarda entero, no solo lo que la IA saco de el.
+  const [archivoLeido, setArchivoLeido] = useState<{ nombre: string; hash: string; archivo: File | null }>({
+    nombre: '',
+    hash: '',
+    archivo: null,
+  })
 
   useEffect(() => {
     let vivo = true
@@ -79,7 +88,7 @@ export default function App() {
           setFase({ tipo: 'error', mensaje: 'Ese PDF exacto ya lo habías subido.' })
           return
         }
-        setArchivoLeido({ nombre: archivo.name, hash })
+        setArchivoLeido({ nombre: archivo.name, hash, archivo })
 
         const { estado } = await leerEstado(archivo)
         const cuenta = resolverCuenta(datos.cuentas, estado.ultimos4, estado.clase, estado.tipoCuenta)
@@ -97,6 +106,22 @@ export default function App() {
       if (!lectura) return
       const cuenta = resolverCuenta(datos.cuentas, lectura.ultimos4, lectura.clase, lectura.tipoCuenta)
 
+      // El PDF original se guarda tal cual llegó, para que puedas volver a
+      // bajarlo. Sin Supabase no hay dónde: el navegador no aguanta guardar
+      // archivos de medio mega por estado.
+      let archivoPath: string | undefined
+      if (hayBackend && supabase && archivoLeido.archivo) {
+        try {
+          const { data } = await supabase.auth.getUser()
+          if (data.user) {
+            archivoPath = await subirEstado(data.user.id, archivoLeido.archivo, archivoLeido.hash)
+          }
+        } catch {
+          // Que falle la copia del PDF no puede costarte los movimientos ya
+          // leídos: se guardan igual y el original queda sin subir.
+        }
+      }
+
       const archivado: EstadoArchivado = {
         id: archivoLeido.hash || `${Date.now()}`,
         nombreArchivo: archivoLeido.nombre,
@@ -110,6 +135,7 @@ export default function App() {
         cuadre:
           lectura.clase === 'tarjeta' ? 'sin_verificar' : lectura.cuadre?.ok ? 'ok' : 'con_descuadres',
         hash: archivoLeido.hash,
+        archivoPath,
       }
 
       await almacen.guardarLectura({
@@ -139,6 +165,15 @@ export default function App() {
     [editando, almacen],
   )
 
+  const descargarOriginal = useCallback(async (e: { archivoPath?: string }) => {
+    if (!e.archivoPath) return
+    try {
+      window.open(await enlaceDeDescarga(e.archivoPath, 120), '_blank')
+    } catch {
+      /* el enlace caduca o el archivo ya no está */
+    }
+  }, [])
+
   // Los traslados se reevalúan contra TODO lo guardado: el otro lado de un
   // pago puede llegar en un estado que subas meses después.
   const conInternos = useMemo(() => {
@@ -166,6 +201,19 @@ export default function App() {
           existentes={conInternos}
           onConfirmar={(r) => void confirmar(r)}
           onDescartar={() => setLectura(null)}
+        />
+      </div>
+    )
+  }
+
+  if (verReporte) {
+    return (
+      <div className="app">
+        <Reporte
+          txns={conInternos}
+          cuentas={vista.cuentas}
+          hoy={hoy}
+          onVolver={() => setVerReporte(false)}
         />
       </div>
     )
@@ -201,6 +249,7 @@ export default function App() {
               ciclos={vista.ciclos}
               hoy={hoy}
               onVerCuenta={setCuentaAbierta}
+              onVerReporte={() => setVerReporte(true)}
             />
           ) : null}
 
@@ -217,6 +266,7 @@ export default function App() {
               estados={vista.estados}
               fase={fase}
               onElegirArchivo={(a) => void alElegirArchivo(a)}
+              onDescargarOriginal={(e) => void descargarOriginal(e)}
             />
           ) : null}
 

@@ -2,18 +2,10 @@ import { useRef } from 'react'
 import { Vacio } from '../components/Piezas'
 import { IconoSubir } from '../components/Iconos'
 import { fechaLarga } from '../lib/dates'
+import type { EstadoArchivado } from '../lib/almacen'
 
-export interface EstadoGuardado {
-  id: string
-  nombreArchivo: string
-  cuenta: string
-  clase: 'cuenta' | 'tarjeta'
-  desde?: string
-  hasta?: string
-  subidoEn: string
-  movimientos: number
-  cuadre: 'ok' | 'con_descuadres' | 'sin_verificar'
-}
+/** El tipo vive en almacen.ts: duplicarlo es como se desincronizan las cosas. */
+export type { EstadoArchivado as EstadoGuardado } from '../lib/almacen'
 
 export type FaseLectura =
   | { tipo: 'listo' }
@@ -24,10 +16,12 @@ export function Estados({
   estados,
   fase,
   onElegirArchivo,
+  onDescargarOriginal,
 }: {
-  estados: EstadoGuardado[]
+  estados: EstadoArchivado[]
   fase: FaseLectura
   onElegirArchivo: (archivo: File) => void
+  onDescargarOriginal?: (e: EstadoArchivado) => void
 }) {
   const input = useRef<HTMLInputElement>(null)
   const leyendo = fase.tipo === 'leyendo'
@@ -119,6 +113,15 @@ export function Estados({
                 <span className="fila-detalle">
                   {fechaLarga(e.desde)} – {fechaLarga(e.hasta)}
                 </span>
+              ) : null}
+              {e.archivoPath && onDescargarOriginal ? (
+                <button
+                  type="button"
+                  className="enlace"
+                  onClick={() => onDescargarOriginal(e)}
+                >
+                  Descargar el PDF original
+                </button>
               ) : null}
             </div>
           ))}

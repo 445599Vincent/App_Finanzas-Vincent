@@ -66,9 +66,21 @@ export function CifraGrande({ valor }: { valor: number }) {
   )
 }
 
+/**
+ * El ambar y el rojo de las alertas quedan a una distancia perceptual muy corta
+ * con daltonismo: medidos, salen a delta-E 2.0 en deuteranopia. Por eso la
+ * severidad no se transmite solo por color, sino tambien escrita.
+ */
+const SEVERIDAD: Record<Alert['severidad'], string> = {
+  alta: 'Atención',
+  media: 'Revisar',
+  info: 'Nota',
+}
+
 export function Aviso({ alerta }: { alerta: Alert }) {
   return (
     <div className={`aviso aviso-${alerta.severidad}`}>
+      <span className="aviso-severidad">{SEVERIDAD[alerta.severidad]}</span>
       <span className="aviso-titulo">{alerta.titulo}</span>
       <span className="aviso-texto">{alerta.mensaje}</span>
       {alerta.evidencia ? <span className="aviso-evidencia">{alerta.evidencia}</span> : null}

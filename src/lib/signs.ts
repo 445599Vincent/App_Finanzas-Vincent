@@ -16,7 +16,7 @@ import type { StatementKind } from '../types'
  *   positivo = mejora tu posicion    negativo = la empeora
  */
 
-const LIMPIAR = /[^0-9.,\-]/g
+const LIMPIAR = /[^0-9.,-]/g
 
 /** Quita "RD$", espacios y separadores de miles. Devuelve el numero sin signo. */
 function magnitud(raw: string): number {
@@ -45,7 +45,7 @@ export function leerMonto(raw: string, kind: StatementKind): MontoLeido {
     throw new Error(`Monto ilegible: ${JSON.stringify(raw)}`)
   }
 
-  const soloNumero = s.replace(/[^0-9.,\-]/g, '')
+  const soloNumero = s.replace(/[^0-9.,-]/g, '')
   const atras = soloNumero.endsWith('-')
   const adelante = soloNumero.startsWith('-')
   const signoEscrito: MontoLeido['signoEscrito'] = atras
